@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
     pass
 
 EMBED_MODEL_NAME = os.getenv("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 CHUNK_WORDS = 220
 CHUNK_OVERLAP = 40
 QUIZ_TYPES = ["Recall", "Understanding", "Vocabulary", "Application", "Scenario"]
@@ -249,6 +249,9 @@ def _chat(system: str, user: str, *, json_mode: bool = False, temperature: float
     )
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
+    if "gpt-oss" in GROQ_MODEL:  # reasoning models: keep thinking short, leave room for the answer
+        kwargs["reasoning_effort"] = "low"
+        kwargs["max_tokens"] = max_tokens + 2000
     try:
         return client.chat.completions.create(**kwargs).choices[0].message.content or ""
     except Exception as exc:
